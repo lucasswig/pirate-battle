@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-19T16:17:34.424Z",
+  "timestamp": "2026-09-19T16:25:26.064Z",
   "targetFps": 60,
   "hardware": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36",
@@ -22,27 +22,27 @@
   "memoryStabilityCycles": [
     {
       "cycle": 0,
-      "usedHeapMB": 16.27
+      "usedHeapMB": 15.54
     },
     {
       "cycle": 1,
-      "usedHeapMB": 23.07
+      "usedHeapMB": 22.5
     },
     {
       "cycle": 2,
-      "usedHeapMB": 20.99
+      "usedHeapMB": 20.76
     },
     {
       "cycle": 3,
-      "usedHeapMB": 22.75
+      "usedHeapMB": 22.57
     },
     {
       "cycle": 4,
-      "usedHeapMB": 22.26
+      "usedHeapMB": 21.08
     },
     {
       "cycle": 5,
-      "usedHeapMB": 21.79
+      "usedHeapMB": 21.51
     }
   ]
 }

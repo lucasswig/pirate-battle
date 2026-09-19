@@ -31,6 +31,65 @@ class SoundManagerService {
   private isMuted = false;
   private ambienceAudio: HTMLAudioElement | null = null;
   private isAmbienceActive = false;
+  private audioPool: Map<string, HTMLAudioElement[]> = new Map();
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.setupAudioUnlock();
+      this.preloadCommonSounds();
+    }
+  }
+
+  private setupAudioUnlock(): void {
+    const unlock = () => {
+      try {
+        const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        silent.volume = 0.001;
+        silent.play().catch(() => {});
+      } catch {}
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+
+    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+    window.addEventListener('keydown', unlock, { once: true, passive: true });
+    window.addEventListener('touchstart', unlock, { once: true, passive: true });
+  }
+
+  private preloadCommonSounds(): void {
+    const commonSounds: SoundEffect[] = [
+      'ui_hover',
+      'ui_click',
+      'ui_open',
+      'ui_close',
+      'ui_back',
+      'game_start',
+      'score_point',
+      'cannon_fire_1',
+      'cannon_fire_2',
+      'cannon_fire_3',
+    ];
+    for (const effect of commonSounds) {
+      this.getOrCreateAudio(effect);
+    }
+  }
+
+  private getOrCreateAudio(effect: SoundEffect): HTMLAudioElement {
+    const pool = this.audioPool.get(effect) || [];
+    const available = pool.find((a) => a.paused || a.ended);
+    if (available) {
+      available.currentTime = 0;
+      return available;
+    }
+    const audio = new Audio(`/assets/sounds/${effect}.wav`);
+    audio.preload = 'auto';
+    if (pool.length < 6) {
+      pool.push(audio);
+      this.audioPool.set(effect, pool);
+    }
+    return audio;
+  }
 
   public play(effect: SoundEffect, volumeFactor = 1): void {
     if (this.isMuted) return;
@@ -41,7 +100,7 @@ class SoundManagerService {
     if (effectiveVolume <= 0) return;
 
     try {
-      const audio = new Audio(`/assets/sounds/${effect}.wav`);
+      const audio = this.getOrCreateAudio(effect);
       audio.volume = Math.max(0, Math.min(1, effectiveVolume));
       audio.play().catch(() => {});
     } catch {}
