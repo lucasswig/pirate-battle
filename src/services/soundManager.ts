@@ -69,6 +69,10 @@ class SoundManagerService {
     this.play(selected, 1.0);
   }
 
+  public playShipSinking(): void {
+    this.play('ship_sinking', 0.85);
+  }
+
   public playShipCollision(): void {
     this.play('ship_collision', 0.9);
   }
@@ -81,6 +85,26 @@ class SoundManagerService {
 
   public playScorePoint(): void {
     this.play('score_point', 0.9);
+  }
+
+  public playHealthLow(): void {
+    this.play('health_low', 0.95);
+  }
+
+  public playTimeWarning(): void {
+    this.play('time_warning', 0.85);
+  }
+
+  public playClick(): void {
+    this.play('ui_click', 0.7);
+  }
+
+  public playHover(): void {
+    this.play('ui_hover', 0.35);
+  }
+
+  public playClose(): void {
+    this.play('ui_close', 0.8);
   }
 
   public startOceanAmbience(): void {
@@ -100,6 +124,7 @@ class SoundManagerService {
     if (this.ambienceAudio && !this.ambienceAudio.paused) {
       this.ambienceAudio.pause();
     }
+    this.pauseSailingAudio();
   }
 
   public resumeOceanAmbience(): void {
@@ -114,6 +139,7 @@ class SoundManagerService {
       this.ambienceAudio.pause();
       this.ambienceAudio.currentTime = 0;
     }
+    this.stopSailingAudio();
   }
 
   public isOceanAmbiencePlaying(): boolean {
@@ -135,10 +161,57 @@ class SoundManagerService {
       : 0.42;
   }
 
+  private sailingAudio: HTMLAudioElement | null = null;
+
+  public updateSailingAudio(speedRatio: number): void {
+    if (this.isMuted || !this.isAmbienceActive) {
+      this.stopSailingAudio();
+      return;
+    }
+
+    if (speedRatio <= 0.05) {
+      if (this.sailingAudio && !this.sailingAudio.paused) {
+        this.sailingAudio.pause();
+      }
+      return;
+    }
+
+    if (!this.sailingAudio) {
+      this.sailingAudio = new Audio('/assets/sounds/ship_sailing_loop.wav');
+      this.sailingAudio.loop = true;
+    }
+
+    const settings = loadGameSettings();
+    const master = Number.isFinite(settings.masterVolume) ? settings.masterVolume : 80;
+    const sfx = Number.isFinite(settings.sfxVolume) ? settings.sfxVolume : 80;
+    const effectiveVolume = (master / 100) * (sfx / 100) * 0.65 * Math.min(1, Math.max(0, speedRatio));
+    this.sailingAudio.volume = Number.isFinite(effectiveVolume)
+      ? Math.max(0, Math.min(1, effectiveVolume))
+      : 0.35;
+
+    if (this.sailingAudio.paused && effectiveVolume > 0) {
+      this.sailingAudio.play().catch(() => {});
+    }
+  }
+
+  public pauseSailingAudio(): void {
+    if (this.sailingAudio && !this.sailingAudio.paused) {
+      this.sailingAudio.pause();
+    }
+  }
+
+  public stopSailingAudio(): void {
+    if (this.sailingAudio) {
+      this.sailingAudio.pause();
+      this.sailingAudio.currentTime = 0;
+    }
+  }
+
   public setMuted(muted: boolean): void {
     this.isMuted = muted;
     if (muted) {
       this.pauseOceanAmbience();
+      this.pauseSailingAudio();
     } else if (this.isAmbienceActive) {
       this.resumeOceanAmbience();
     }

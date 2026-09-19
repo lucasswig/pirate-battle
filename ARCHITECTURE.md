@@ -363,7 +363,27 @@ Rather than displaying non-functional controls or disruptive tutorial dialogs, t
 * **Modal Purge:** The legacy `IOSFullscreenModal` component was completely removed. No instructional dialogs ever pop up.
 * **Desktop / Android Integrity:** Desktop browsers (Chromium, Firefox, Edge, Safari Mac) and Android devices retain the full-featured golden-framed fullscreen toggle button.
 
+---
 
+## 15. Complete 100% Soundscape & Audio Architecture `[ACTIVE]`
 
-
-
+### A. Sound Inventory & Classification
+The game features a complete, 27-asset custom soundscape mapped across 4 specialized categories:
+1. **Naval Combat & Physics:**
+   * Cannon fire variants: `cannon_fire_1`, `cannon_fire_2`, `cannon_fire_3` (randomized selection).
+   * Sequential broadside salvo: `cannon_broadside` with staggered organic delays.
+   * Projectile impacts: `cannonball_water_hit_1`, `cannonball_water_hit_2` (water splash) and `ship_wood_hit_1`, `ship_wood_hit_2` (hull penetration).
+   * Physical vessel impact: `ship_collision`.
+   * Cataclysmic destruction: `ship_explosion_1`, `ship_explosion_2`.
+   * Wreck submergence: `ship_sinking` triggered immediately upon enemy and player vessel death alongside wreckage creation.
+2. **Sailing Dynamics & Environment:**
+   * `ocean_ambience_loop`: Persistent ocean wind/wave background loop governed by strict state machine (`isAmbienceActive`).
+   * `ship_sailing_loop`: Speed-modulated wake loop dynamically linked to `player.currentSpeed / config.playerMoveSpeed`. Automatically paused when stationary ($v \le 0.05$) and terminated on match end, pause, or engine teardown.
+3. **Match Telemetry & Tactical Alerts:**
+   * Critical hull alarm: `health_low` triggered upon crossing $\le 35\%$ integrity threshold.
+   * Countdown tension: `time_warning` executed on each remaining second during the final 10 seconds ($t \le 10$ and $t > 0$).
+   * Match resolutions: `game_start`, `score_point`, `game_complete` (victory), `game_over` (defeat).
+4. **Haptic UI Feedback:**
+   * Button actuation: `ui_click` on `RoundButton`, `MenuButton`, `SecondaryMenuButton`, and `TabButton`.
+   * Button hover: `ui_hover` on `MenuButton` mouseover.
+   * Window navigation: `ui_open`, `ui_close`, and `ui_back` on modal/dialog and screen transitions.

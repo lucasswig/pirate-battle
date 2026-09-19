@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SoundManager } from '../../services/soundManager';
 
 export const UI_FRAMES: Record<string, { x: number; y: number; w: number; h: number }> = {
   panel_menu: { x: 4, y: 4, w: 384, h: 480 },
@@ -126,6 +127,16 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
     if (onPointerLeave) onPointerLeave();
   };
 
+  const handleClick = () => {
+    if (disabled) return;
+    if (icon === 'icon_close') {
+      SoundManager.playClose();
+    } else {
+      SoundManager.playClick();
+    }
+    onClick?.();
+  };
+
   const active = (isPressed || isActive) && !disabled;
   const baseFrame = active ? 'button_round_pressed' : 'button_round_normal';
   const effectiveIconScale = iconScale ?? 0.48;
@@ -136,7 +147,7 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
       title={title}
       disabled={disabled}
       data-testid={testId}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled || !onClick ? undefined : handleClick}
       onPointerDown={handleDown}
       onPointerUp={handleUp}
       onPointerLeave={handleLeave}
@@ -326,18 +337,28 @@ export const MenuButton: React.FC<MenuButtonProps> = ({
       ? 'button_primary_hover'
       : 'button_primary_normal';
 
+  const handleClick = () => {
+    SoundManager.playClick();
+    onClick?.();
+  };
+
+  const handlePointerEnter = () => {
+    setIsHovered(true);
+    SoundManager.playHover();
+  };
+
   return (
     <button
       type="button"
       data-testid={testId}
-      onClick={onClick}
+      onClick={handleClick}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => {
         setIsPressed(false);
         setIsHovered(false);
       }}
-      onPointerEnter={() => setIsHovered(true)}
+      onPointerEnter={handlePointerEnter}
       className={`relative inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer active:scale-95 transition-transform touch-manipulation focus:outline-none focus-visible:outline-none focus-visible:brightness-110 focus-visible:drop-shadow-[0_0_10px_rgba(251,191,36,0.65)] ${className}`}
       style={{
         width: `${256 * scale}px`,
@@ -375,13 +396,18 @@ export const SecondaryMenuButton: React.FC<SecondaryMenuButtonProps> = ({
 }) => {
   const [isPressed, setIsPressed] = useState(false);
 
+  const handleClick = () => {
+    SoundManager.playClick();
+    onClick?.();
+  };
+
   const frameName = isPressed ? 'button_secondary_pressed' : 'button_secondary_normal';
 
   return (
     <button
       type="button"
       data-testid={testId}
-      onClick={onClick}
+      onClick={handleClick}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
@@ -424,6 +450,11 @@ export const TabButton: React.FC<TabButtonProps> = ({
 }) => {
   const [isPressed, setIsPressed] = useState(false);
 
+  const handleClick = () => {
+    SoundManager.playClick();
+    onClick?.();
+  };
+
   const frameName = isActive
     ? isPressed
       ? 'button_primary_pressed'
@@ -438,7 +469,7 @@ export const TabButton: React.FC<TabButtonProps> = ({
       role="tab"
       aria-selected={isActive}
       data-testid={testId}
-      onClick={onClick}
+      onClick={handleClick}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}

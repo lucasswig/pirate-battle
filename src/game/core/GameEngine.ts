@@ -286,6 +286,9 @@ export class GameEngine {
     if (currentSecond !== this.lastSecondReported) {
       this.lastSecondReported = currentSecond;
       this.events.emit('timeUpdated', currentSecond);
+      if (currentSecond <= 10 && currentSecond > 0) {
+        SoundManager.playTimeWarning();
+      }
     }
 
     if (this.remainingTime <= 0) {
@@ -304,6 +307,9 @@ export class GameEngine {
       this.player.updateInput(input, dt);
       this.player.update(dt);
       this.collisionSystem?.resolveShipCollisions(this.player);
+
+      const speedRatio = this.player.currentSpeed / this.config.playerMoveSpeed;
+      SoundManager.updateSailingAudio(speedRatio);
 
       this.combatSystem?.handlePlayerCombat(this.player, input);
       this.events.emit('playerCooldowns', {
@@ -441,6 +447,7 @@ export class GameEngine {
     this.visualFeedback?.spawnShipDestruction(enemy.x, enemy.y, shorePoint, survivorsAllowed, survivorCount);
 
     SoundManager.playShipExplosion();
+    SoundManager.playShipSinking();
   }
 
   private resolveCombatCollisions(): void {
@@ -494,6 +501,7 @@ export class GameEngine {
           if (this.player.isDead) {
             this.visualFeedback?.spawnExplosion(this.player.x, this.player.y, 2.0);
             SoundManager.playShipExplosion();
+            SoundManager.playShipSinking();
             this.triggerMatchEnd('PLAYER_DEFEATED');
             return;
           } else {

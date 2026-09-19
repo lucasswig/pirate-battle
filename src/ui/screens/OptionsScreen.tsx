@@ -61,6 +61,7 @@ export const OptionsScreen: React.FC<OptionsScreenProps> = ({ onClose, isModal =
     saveGameSettings(settings);
     SoundManager.updateAmbienceVolume();
     if (onClose) {
+      SoundManager.playClose();
       onClose();
     } else {
       navigateTo('MENU');

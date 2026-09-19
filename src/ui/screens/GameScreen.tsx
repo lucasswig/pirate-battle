@@ -147,6 +147,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
           setPlayerHealth(val);
           if (val <= 35 && prevHealthRef.current > 35) {
             setAnnouncement(`Warning: Hull integrity critical at ${val} percent!`);
+            SoundManager.playHealthLow();
           }
           prevHealthRef.current = val;
         }
@@ -250,6 +251,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
   useFocusTrap(pauseModalRef, isPaused && !matchResult && !isOptionsOpen, () => {
     if (isOptionsOpen) {
       setIsOptionsOpen(false);
+      SoundManager.playClose();
     } else {
       handleTogglePause();
     }
@@ -276,6 +278,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
         e.preventDefault();
         if (isOptionsOpen) {
           setIsOptionsOpen(false);
+          SoundManager.playClose();
         } else {
           handleTogglePause();
         }
@@ -492,7 +495,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/75 backdrop-blur-md select-none pointer-events-auto"
           >
             {isOptionsOpen ? (
-              <OptionsScreen isModal onClose={() => setIsOptionsOpen(false)} />
+              <OptionsScreen
+                isModal
+                onClose={() => {
+                  setIsOptionsOpen(false);
+                  SoundManager.playClose();
+                }}
+              />
             ) : (
               <div
                 ref={pauseModalRef}
@@ -530,7 +539,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
                   <MenuButton
                     text="OPTIONS"
                     scale={isMobileLayout ? 0.95 : 1.05}
-                    onClick={() => setIsOptionsOpen(true)}
+                    onClick={() => {
+                      setIsOptionsOpen(true);
+                      SoundManager.play('ui_open');
+                    }}
                     data-testid="pause-options-btn"
                   />
                   <MenuButton

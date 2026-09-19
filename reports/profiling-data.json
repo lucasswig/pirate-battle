@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-19T15:22:11.331Z",
+  "timestamp": "2026-09-19T16:05:24.316Z",
   "targetFps": 60,
   "hardware": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36",
@@ -12,8 +12,8 @@
     "webglRenderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
   },
   "combatBenchmark": {
-    "fps": 143,
-    "p95FrameTimeMs": 7,
+    "fps": 145,
+    "p95FrameTimeMs": 7.1,
     "avgFrameTimeMs": 6.94,
     "activeEnemies": 1,
     "activeProjectiles": 0,
@@ -22,27 +22,27 @@
   "memoryStabilityCycles": [
     {
       "cycle": 0,
-      "usedHeapMB": 16.2
+      "usedHeapMB": 16.26
     },
     {
       "cycle": 1,
-      "usedHeapMB": 22
+      "usedHeapMB": 22.62
     },
     {
       "cycle": 2,
-      "usedHeapMB": 20.61
+      "usedHeapMB": 20.91
     },
     {
       "cycle": 3,
-      "usedHeapMB": 19.76
+      "usedHeapMB": 23.69
     },
     {
       "cycle": 4,
-      "usedHeapMB": 21.01
+      "usedHeapMB": 22.78
     },
     {
       "cycle": 5,
-      "usedHeapMB": 23.19
+      "usedHeapMB": 21.67
     }
   ]
 }
