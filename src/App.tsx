@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NavigationProvider, useNavigation } from './ui/navigation/NavigationContext';
 import { MainMenuScreen } from './ui/screens/MainMenuScreen';
 import { LiveGameBackground } from './ui/components/LiveGameBackground';
+import { InitialLoadingScreen } from './ui/components/InitialLoadingScreen';
+import { MinimalLoader } from './ui/components/MinimalLoader';
 import { syncOfflineMatches } from './api/matchApi';
 
 const GameScreen = React.lazy(() => import('./ui/screens/GameScreen').then((m) => ({ default: m.GameScreen })));
@@ -21,6 +23,7 @@ const queryClient = new QueryClient({
 
 const AppContent: React.FC = () => {
   const { currentScreen, navigateTo } = useNavigation();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -33,7 +36,7 @@ const AppContent: React.FC = () => {
 
   if (currentScreen === 'GAME') {
     return (
-      <React.Suspense fallback={<div className="w-full h-full bg-[#00121e]" />}>
+      <React.Suspense fallback={<MinimalLoader isFixed />}>
         <GameScreen
           onReturnToMenu={() => navigateTo('MENU')}
           onNavigateToRanking={() => navigateTo('RANKING')}
@@ -74,6 +77,9 @@ const AppContent: React.FC = () => {
         />
       </div>
       <NetworkScenarioDrawer />
+      {isInitialLoading && (
+        <InitialLoadingScreen onFinish={() => setIsInitialLoading(false)} />
+      )}
     </div>
   );
 };

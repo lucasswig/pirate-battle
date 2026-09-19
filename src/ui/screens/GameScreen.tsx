@@ -11,6 +11,7 @@ import { useSubmitRanking } from '@/api/rankingApi';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
 import { OrientationBlocker } from '../components/OrientationBlocker';
+import { MinimalLoader } from '../components/MinimalLoader';
 import { OptionsScreen } from './OptionsScreen';
 import {
   getFullscreenElement,
@@ -333,65 +334,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onReturnToMenu }) => {
         />
 
         {isLoading && (
-          <div
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-cover bg-center select-none"
-            style={{ backgroundImage: `url('/assets/ui_scene_background.png')` }}
-          >
-            <div className="absolute inset-0 bg-[#00121e]/75 backdrop-blur-[2px]" />
-
-            <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center max-w-sm">
-              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-widest text-pirate-gold mb-6 font-pirate drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                Hoisting Sails...
-              </h2>
-
-              <div className="relative flex items-center justify-center w-36 h-36 mb-5">
-                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="52"
-                    className="stroke-black/50 fill-[#001827]/80"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="52"
-                    className="stroke-pirate-gold/25 fill-none"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="52"
-                    fill="none"
-                    stroke="url(#loadingGoldGradient)"
-                    strokeWidth="8"
-                    strokeDasharray={2 * Math.PI * 52}
-                    strokeDashoffset={(2 * Math.PI * 52) * (1 - loadingProgress / 100)}
-                    strokeLinecap="round"
-                    className="transition-[stroke-dashoffset] duration-150 ease-out"
-                  />
-                  <defs>
-                    <linearGradient id="loadingGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fde047" />
-                      <stop offset="100%" stopColor="#e0a92b" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-black text-pirate-gold font-pirate drop-shadow-md">
-                    {loadingProgress}%
-                  </span>
-                </div>
-              </div>
-
-              <span className="text-xs sm:text-sm text-pirate-parchment/80 font-mono tracking-wider drop-shadow">
-                Loading assets: {loadingProgress}%
-              </span>
-            </div>
-          </div>
+          <MinimalLoader
+            srOnlyText={`Hoisting Sails... Loading assets: ${loadingProgress}%`}
+          />
         )}
 
         {!isLoading && !isPaused && !matchResult && (

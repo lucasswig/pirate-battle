@@ -233,12 +233,12 @@ test('Capture pause menu across mobile and desktop viewports', async ({ page }) 
   await page.screenshot({ path: 'test-results/screenshots/battle_complete_desktop_1280.png' });
 });
 
-test('Capture loading screen with background and circular gauge', async ({ page }) => {
+test('Capture minimal loading screen', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/');
   await page.locator('[data-testid="menu-btn-play"]').click();
-  const loading = page.locator('text=Hoisting Sails...');
+  const loading = page.locator('text=LOADING...');
   await expect(loading).toBeVisible();
-  await page.screenshot({ path: 'test-results/screenshots/loading_screen_circular.png' });
+  await page.screenshot({ path: 'test-results/screenshots/loading_screen_minimal.png' });
   await page.waitForSelector('text=Loading assets:', { state: 'detached', timeout: 15000 });
 });
