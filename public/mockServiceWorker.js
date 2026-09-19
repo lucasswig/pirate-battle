@@ -96,6 +96,14 @@ addEventListener('fetch', function (event) {
     return
   }
 
+  // Bypass all non-API requests (static assets, images, audio, js, css).
+  try {
+    const url = new URL(event.request.url)
+    if (!url.pathname.startsWith('/api')) {
+      return
+    }
+  } catch {}
+
   // Opening the DevTools triggers the "only-if-cached" request
   // that cannot be handled by the worker. Bypass such requests.
   if (

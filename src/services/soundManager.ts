@@ -36,7 +36,6 @@ class SoundManagerService {
   constructor() {
     if (typeof window !== 'undefined') {
       this.setupAudioUnlock();
-      this.preloadCommonSounds();
     }
   }
 
@@ -55,24 +54,6 @@ class SoundManagerService {
     window.addEventListener('pointerdown', unlock, { once: true, passive: true });
     window.addEventListener('keydown', unlock, { once: true, passive: true });
     window.addEventListener('touchstart', unlock, { once: true, passive: true });
-  }
-
-  private preloadCommonSounds(): void {
-    const commonSounds: SoundEffect[] = [
-      'ui_hover',
-      'ui_click',
-      'ui_open',
-      'ui_close',
-      'ui_back',
-      'game_start',
-      'score_point',
-      'cannon_fire_1',
-      'cannon_fire_2',
-      'cannon_fire_3',
-    ];
-    for (const effect of commonSounds) {
-      this.getOrCreateAudio(effect);
-    }
   }
 
   private getOrCreateAudio(effect: SoundEffect): HTMLAudioElement {
