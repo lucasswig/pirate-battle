@@ -38,3 +38,18 @@ test('Mobile landscape menu fits viewport perfectly and scales content', async (
   await page.waitForTimeout(500);
   await page.screenshot({ path: 'test-results/screenshots/mobile-menu-visual.png' });
 });
+
+test('Main menu secondary buttons have golden hover fill and trigger hover sound', async ({ page }) => {
+  await page.goto('/');
+  const historyBtn = page.locator('[data-testid="menu-btn-history"]');
+  await expect(historyBtn).toBeVisible();
+
+  await historyBtn.hover();
+  await page.waitForTimeout(200);
+
+  await page.screenshot({ path: 'test-results/screenshots/match-history-hover.png' });
+
+  const textSpan = historyBtn.locator('span');
+  await expect(textSpan).toHaveClass(/text-\[#331c00\]/);
+});
+

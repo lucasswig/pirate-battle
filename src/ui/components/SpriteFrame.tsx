@@ -109,6 +109,7 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
   'data-testid': testId,
 }) => {
   const [isPressed, setIsPressed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleDown = () => {
     if (disabled) return;
@@ -124,7 +125,16 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
 
   const handleLeave = () => {
     setIsPressed(false);
+    setIsHovered(false);
     if (onPointerLeave) onPointerLeave();
+  };
+
+  const handleEnter = () => {
+    if (disabled) return;
+    setIsHovered(true);
+    if (onClick) {
+      SoundManager.playHover();
+    }
   };
 
   const handleClick = () => {
@@ -138,7 +148,11 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
   };
 
   const active = (isPressed || isActive) && !disabled;
-  const baseFrame = active ? 'button_round_pressed' : 'button_round_normal';
+  const baseFrame = active
+    ? 'button_round_pressed'
+    : isHovered && !disabled
+      ? 'button_round_hover'
+      : 'button_round_normal';
   const effectiveIconScale = iconScale ?? 0.48;
 
   return (
@@ -150,6 +164,7 @@ export const RoundButton: React.FC<RoundButtonProps> = ({
       onClick={disabled || !onClick ? undefined : handleClick}
       onPointerDown={handleDown}
       onPointerUp={handleUp}
+      onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
       className={`relative inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer active:scale-95 transition-transform touch-manipulation focus:outline-none focus-visible:outline-none focus-visible:brightness-110 focus-visible:drop-shadow-[0_0_8px_rgba(251,191,36,0.65)] ${
         disabled ? 'opacity-40 cursor-not-allowed pointer-events-none active:scale-100' : ''
@@ -395,13 +410,30 @@ export const SecondaryMenuButton: React.FC<SecondaryMenuButtonProps> = ({
   'data-testid': testId,
 }) => {
   const [isPressed, setIsPressed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
     SoundManager.playClick();
     onClick?.();
   };
 
-  const frameName = isPressed ? 'button_secondary_pressed' : 'button_secondary_normal';
+  const handlePointerEnter = () => {
+    setIsHovered(true);
+    SoundManager.playHover();
+  };
+
+  const handlePointerLeave = () => {
+    setIsPressed(false);
+    setIsHovered(false);
+  };
+
+  const frameName = isPressed
+    ? isHovered
+      ? 'button_primary_pressed'
+      : 'button_secondary_pressed'
+    : isHovered
+      ? 'button_primary_hover'
+      : 'button_secondary_normal';
 
   return (
     <button
@@ -410,7 +442,8 @@ export const SecondaryMenuButton: React.FC<SecondaryMenuButtonProps> = ({
       onClick={handleClick}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
-      onPointerLeave={() => setIsPressed(false)}
+      onPointerLeave={handlePointerLeave}
+      onPointerEnter={handlePointerEnter}
       className={`relative inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer active:scale-95 transition-transform touch-manipulation focus:outline-none focus-visible:outline-none focus-visible:brightness-110 focus-visible:drop-shadow-[0_0_10px_rgba(251,191,36,0.65)] ${className}`}
       style={{
         width: `${256 * scale}px`,
@@ -419,7 +452,11 @@ export const SecondaryMenuButton: React.FC<SecondaryMenuButtonProps> = ({
     >
       <SpriteFrame name={frameName} scale={scale} />
       <span
-        className="absolute inset-0 flex items-center justify-center font-bold tracking-wider uppercase select-none text-pirate-parchment drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] px-2 whitespace-nowrap"
+        className={`absolute inset-0 flex items-center justify-center tracking-wider uppercase select-none px-2 whitespace-nowrap transition-colors duration-150 ${
+          isHovered
+            ? 'font-black text-[#331c00] drop-shadow-[0_1px_0_rgba(255,255,255,0.45)]'
+            : 'font-bold text-pirate-parchment drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
+        }`}
         style={{
           fontSize: `${Math.max(11, Math.round(15 * scale))}px`,
           transform: isPressed ? 'translate(0px, 2px)' : 'none',
@@ -449,10 +486,23 @@ export const TabButton: React.FC<TabButtonProps> = ({
   'data-testid': testId,
 }) => {
   const [isPressed, setIsPressed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
     SoundManager.playClick();
     onClick?.();
+  };
+
+  const handlePointerEnter = () => {
+    setIsHovered(true);
+    if (!isActive) {
+      SoundManager.playHover();
+    }
+  };
+
+  const handlePointerLeave = () => {
+    setIsPressed(false);
+    setIsHovered(false);
   };
 
   const frameName = isActive
@@ -461,7 +511,9 @@ export const TabButton: React.FC<TabButtonProps> = ({
       : 'button_primary_normal'
     : isPressed
       ? 'button_secondary_pressed'
-      : 'button_secondary_normal';
+      : isHovered
+        ? 'button_primary_hover'
+        : 'button_secondary_normal';
 
   return (
     <button
@@ -472,7 +524,8 @@ export const TabButton: React.FC<TabButtonProps> = ({
       onClick={handleClick}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
-      onPointerLeave={() => setIsPressed(false)}
+      onPointerLeave={handlePointerLeave}
+      onPointerEnter={handlePointerEnter}
       className={`relative inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer active:scale-95 transition-transform touch-manipulation focus:outline-none focus-visible:outline-none focus-visible:brightness-110 focus-visible:drop-shadow-[0_0_10px_rgba(251,191,36,0.65)] ${className}`}
       style={{
         width: `${256 * scale}px`,
@@ -481,10 +534,10 @@ export const TabButton: React.FC<TabButtonProps> = ({
     >
       <SpriteFrame name={frameName} scale={scale} />
       <span
-        className={`absolute inset-0 flex items-center justify-center font-black tracking-wider uppercase select-none px-2 whitespace-nowrap antialiased ${
-          isActive
-            ? 'text-[#331c00] drop-shadow-[0_1px_0_rgba(255,255,255,0.45)]'
-            : 'text-pirate-parchment drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
+        className={`absolute inset-0 flex items-center justify-center tracking-wider uppercase select-none px-2 whitespace-nowrap antialiased transition-colors duration-150 ${
+          isActive || isHovered
+            ? 'font-black text-[#331c00] drop-shadow-[0_1px_0_rgba(255,255,255,0.45)]'
+            : 'font-bold text-pirate-parchment drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
         }`}
         style={{
           fontSize: `${Math.max(11, Math.round(21 * scale))}px`,
