@@ -1,0 +1,17 @@
+{
+  "name": "Pirate Battle — 2D Naval Action",
+  "short_name": "Pirate Battle",
+  "description": "2D Naval Action Game - Navigate the islands, sink enemy ships, survive the battle.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#00121e",
+  "theme_color": "#00121e",
+  "icons": [
+    {
+      "src": "/assets/logo_jungle_gaming.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

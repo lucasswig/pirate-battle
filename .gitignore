@@ -1,0 +1,50 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node modules & dependencies
+node_modules
+dist
+dist-ssr
+*.local
+
+# Playwright & test outputs
+test-results/
+/playwright-report/
+blob-report/
+playwright/.cache/
+.playwright/
+coverage/
+!reports/
+!reports/playwright-report/
+
+# Cloudflare & Deployment
+.wrangler
+.cloudflare
+
+# Editor & OS files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Temporary files & cache
+.temp
+.cache
+# Documentation internal notes
+docs/internal/
