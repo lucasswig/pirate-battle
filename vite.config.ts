@@ -18,15 +18,6 @@ export default defineConfig({
     target: 'esnext',
     reportCompressedSize: false,
     assetsInlineLimit: 0,
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-pixi': ['pixi.js'],
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-query': ['@tanstack/react-query', 'axios'],
-        },
-      },
-    },
+    chunkSizeWarningLimit: 1500,
   },
 });
