@@ -9,15 +9,15 @@ interface VirtualControlsProps {
 export const VirtualControls: React.FC<VirtualControlsProps> = ({ inputManager }) => {
   const steeringRef = useRef<HTMLDivElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
+  const keysRef = useRef<Record<string, boolean>>({});
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
   const setInput = useCallback(
     (key: string, pressed: boolean) => {
       if (!inputManager) return;
-      setPressedKeys((prev) => {
-        if (prev[key] === pressed) return prev;
-        return { ...prev, [key]: pressed };
-      });
+      if (keysRef.current[key] === pressed) return;
+      keysRef.current[key] = pressed;
+      setPressedKeys((prev) => ({ ...prev, [key]: pressed }));
       inputManager.setVirtualInput({ [key]: pressed });
     },
     [inputManager]

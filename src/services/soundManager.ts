@@ -29,62 +29,206 @@ export type SoundEffect =
 
 class SoundManagerService {
   private isMuted = false;
+  private ctx: AudioContext | null = null;
+  private bufferCache = new Map<string, AudioBuffer>();
+  private pendingLoads = new Map<string, Promise<AudioBuffer | null>>();
+  private audioPool = new Map<string, HTMLAudioElement[]>();
+
   private ambienceAudio: HTMLAudioElement | null = null;
   private isAmbienceActive = false;
-  private audioPool: Map<string, HTMLAudioElement[]> = new Map();
+  private isAmbienceStarting = false;
+
+  private sailingAudio: HTMLAudioElement | null = null;
+  private isSailingStarting = false;
+  private isSailingPlaying = false;
+
+  private cachedSettings = loadGameSettings();
+  private lastSettingsCheck = 0;
 
   constructor() {
     if (typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        try {
+          this.ctx = new AudioCtx();
+        } catch {
+          this.ctx = null;
+        }
+      }
+
       this.setupAudioUnlock();
+
+      const schedule = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 150));
+      schedule(() => {
+        this.preloadUISounds();
+      });
     }
   }
 
   private setupAudioUnlock(): void {
     const unlock = () => {
-      try {
-        const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-        silent.volume = 0.001;
-        silent.play().catch(() => {});
-      } catch {}
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+      cleanup();
+    };
+
+    const cleanup = () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
       window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('click', unlock);
     };
 
-    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
-    window.addEventListener('keydown', unlock, { once: true, passive: true });
-    window.addEventListener('touchstart', unlock, { once: true, passive: true });
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('click', unlock, { passive: true });
   }
 
-  private getOrCreateAudio(effect: SoundEffect): HTMLAudioElement {
+  private getCachedSettings() {
+    const now = Date.now();
+    if (now - this.lastSettingsCheck > 500) {
+      this.cachedSettings = loadGameSettings();
+      this.lastSettingsCheck = now;
+    }
+    return this.cachedSettings;
+  }
+
+  private async loadBuffer(name: string): Promise<AudioBuffer | null> {
+    if (this.bufferCache.has(name)) {
+      return this.bufferCache.get(name)!;
+    }
+    if (this.pendingLoads.has(name)) {
+      return this.pendingLoads.get(name)!;
+    }
+
+    const loadPromise = (async () => {
+      try {
+        const res = await fetch(`/assets/sounds/${name}.wav`);
+        if (!res.ok) return null;
+        const arrayBuf = await res.arrayBuffer();
+        if (!this.ctx) return null;
+
+        const audioBuf = await new Promise<AudioBuffer>((resolve, reject) => {
+          const ret = this.ctx!.decodeAudioData(arrayBuf, resolve, reject);
+          if (ret && typeof (ret as Promise<AudioBuffer>).then === 'function') {
+            (ret as Promise<AudioBuffer>).then(resolve).catch(reject);
+          }
+        });
+
+        this.bufferCache.set(name, audioBuf);
+        return audioBuf;
+      } catch {
+        return null;
+      } finally {
+        this.pendingLoads.delete(name);
+      }
+    })();
+
+    this.pendingLoads.set(name, loadPromise);
+    return loadPromise;
+  }
+
+  public async preloadUISounds(): Promise<void> {
+    const uiSounds: SoundEffect[] = ['ui_click', 'ui_hover', 'ui_open', 'ui_close', 'ui_back'];
+    for (const sound of uiSounds) {
+      await this.loadBuffer(sound);
+    }
+  }
+
+  public async preloadCombatSounds(): Promise<void> {
+    const combatSounds: SoundEffect[] = [
+      'cannon_fire_1',
+      'cannon_fire_2',
+      'cannon_fire_3',
+      'cannon_broadside',
+      'cannonball_water_hit_1',
+      'cannonball_water_hit_2',
+      'ship_wood_hit_1',
+      'ship_wood_hit_2',
+      'ship_collision',
+      'ship_explosion_1',
+      'ship_explosion_2',
+      'ship_sinking',
+      'score_point',
+      'health_low',
+      'time_warning',
+      'game_start',
+      'game_complete',
+      'game_over',
+    ];
+
+    const queue = [...combatSounds];
+    const workers = Array.from({ length: 3 }, async () => {
+      while (queue.length > 0) {
+        const next = queue.shift();
+        if (next) await this.loadBuffer(next);
+      }
+    });
+    await Promise.all(workers);
+  }
+
+  private playBuffer(buffer: AudioBuffer, volume: number): void {
+    if (!this.ctx) return;
+    try {
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      const gainNode = this.ctx.createGain();
+      gainNode.gain.setValueAtTime(Math.max(0, Math.min(1, volume)), this.ctx.currentTime);
+      source.connect(gainNode);
+      gainNode.connect(this.ctx.destination);
+      source.start(0);
+    } catch {}
+  }
+
+  private playHtmlAudioFallback(effect: SoundEffect, volume: number): void {
     const pool = this.audioPool.get(effect) || [];
-    const available = pool.find((a) => a.paused || a.ended);
-    if (available) {
-      available.currentTime = 0;
-      return available;
+    let audio = pool.find((a) => a.paused || a.ended);
+    if (!audio) {
+      audio = new Audio(`/assets/sounds/${effect}.wav`);
+      audio.preload = 'auto';
+      if (pool.length < 4) {
+        pool.push(audio);
+        this.audioPool.set(effect, pool);
+      }
     }
-    const audio = new Audio(`/assets/sounds/${effect}.wav`);
-    audio.preload = 'auto';
-    if (pool.length < 6) {
-      pool.push(audio);
-      this.audioPool.set(effect, pool);
-    }
-    return audio;
+    try {
+      audio.currentTime = 0;
+      audio.volume = Math.max(0, Math.min(1, volume));
+      audio.play().catch(() => {});
+    } catch {}
   }
 
   public play(effect: SoundEffect, volumeFactor = 1): void {
     if (this.isMuted) return;
 
-    const settings = loadGameSettings();
+    const settings = this.getCachedSettings();
     const effectiveVolume = (settings.masterVolume / 100) * (settings.sfxVolume / 100) * volumeFactor;
-
     if (effectiveVolume <= 0) return;
 
-    try {
-      const audio = this.getOrCreateAudio(effect);
-      audio.volume = Math.max(0, Math.min(1, effectiveVolume));
-      audio.play().catch(() => {});
-    } catch {}
+    if (this.ctx) {
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      const buffer = this.bufferCache.get(effect);
+      if (buffer) {
+        this.playBuffer(buffer, effectiveVolume);
+        return;
+      }
+
+      this.loadBuffer(effect)
+        .then((loaded) => {
+          if (loaded && !this.isMuted) {
+            this.playBuffer(loaded, effectiveVolume);
+          }
+        })
+        .catch(() => {});
+      return;
+    }
+
+    this.playHtmlAudioFallback(effect, effectiveVolume);
   }
 
   public playCannonFire(): void {
@@ -154,10 +298,21 @@ class SoundManagerService {
     if (!this.ambienceAudio) {
       this.ambienceAudio = new Audio('/assets/sounds/ocean_ambience_loop.wav');
       this.ambienceAudio.loop = true;
+      this.ambienceAudio.preload = 'auto';
     }
 
     this.updateAmbienceVolume();
-    this.ambienceAudio.play().catch(() => {});
+    if (this.ambienceAudio.paused && !this.isAmbienceStarting) {
+      this.isAmbienceStarting = true;
+      this.ambienceAudio
+        .play()
+        .then(() => {
+          this.isAmbienceStarting = false;
+        })
+        .catch(() => {
+          this.isAmbienceStarting = false;
+        });
+    }
   }
 
   public pauseOceanAmbience(): void {
@@ -170,7 +325,17 @@ class SoundManagerService {
   public resumeOceanAmbience(): void {
     if (!this.isAmbienceActive || this.isMuted || !this.ambienceAudio) return;
     this.updateAmbienceVolume();
-    this.ambienceAudio.play().catch(() => {});
+    if (this.ambienceAudio.paused && !this.isAmbienceStarting) {
+      this.isAmbienceStarting = true;
+      this.ambienceAudio
+        .play()
+        .then(() => {
+          this.isAmbienceStarting = false;
+        })
+        .catch(() => {
+          this.isAmbienceStarting = false;
+        });
+    }
   }
 
   public stopOceanAmbience(): void {
@@ -191,8 +356,9 @@ class SoundManagerService {
   }
 
   public updateAmbienceVolume(): void {
+    this.cachedSettings = loadGameSettings();
     if (!this.ambienceAudio) return;
-    const settings = loadGameSettings();
+    const settings = this.cachedSettings;
     const master = Number.isFinite(settings.masterVolume) ? settings.masterVolume : 80;
     const music = Number.isFinite(settings.musicVolume) ? settings.musicVolume : 70;
     const effectiveVolume = (master / 100) * (music / 100) * 0.75;
@@ -200,8 +366,6 @@ class SoundManagerService {
       ? Math.max(0, Math.min(1, effectiveVolume))
       : 0.42;
   }
-
-  private sailingAudio: HTMLAudioElement | null = null;
 
   public updateSailingAudio(speedRatio: number): void {
     if (this.isMuted || !this.isAmbienceActive) {
@@ -212,6 +376,7 @@ class SoundManagerService {
     if (speedRatio <= 0.05) {
       if (this.sailingAudio && !this.sailingAudio.paused) {
         this.sailingAudio.pause();
+        this.isSailingPlaying = false;
       }
       return;
     }
@@ -219,24 +384,36 @@ class SoundManagerService {
     if (!this.sailingAudio) {
       this.sailingAudio = new Audio('/assets/sounds/ship_sailing_loop.wav');
       this.sailingAudio.loop = true;
+      this.sailingAudio.preload = 'auto';
     }
 
-    const settings = loadGameSettings();
+    const settings = this.getCachedSettings();
     const master = Number.isFinite(settings.masterVolume) ? settings.masterVolume : 80;
     const sfx = Number.isFinite(settings.sfxVolume) ? settings.sfxVolume : 80;
     const effectiveVolume = (master / 100) * (sfx / 100) * 0.65 * Math.min(1, Math.max(0, speedRatio));
+
     this.sailingAudio.volume = Number.isFinite(effectiveVolume)
       ? Math.max(0, Math.min(1, effectiveVolume))
       : 0.35;
 
-    if (this.sailingAudio.paused && effectiveVolume > 0) {
-      this.sailingAudio.play().catch(() => {});
+    if (!this.isSailingPlaying && !this.isSailingStarting && effectiveVolume > 0) {
+      this.isSailingStarting = true;
+      this.sailingAudio
+        .play()
+        .then(() => {
+          this.isSailingPlaying = true;
+          this.isSailingStarting = false;
+        })
+        .catch(() => {
+          this.isSailingStarting = false;
+        });
     }
   }
 
   public pauseSailingAudio(): void {
     if (this.sailingAudio && !this.sailingAudio.paused) {
       this.sailingAudio.pause();
+      this.isSailingPlaying = false;
     }
   }
 
@@ -244,6 +421,7 @@ class SoundManagerService {
     if (this.sailingAudio) {
       this.sailingAudio.pause();
       this.sailingAudio.currentTime = 0;
+      this.isSailingPlaying = false;
     }
   }
 
@@ -261,5 +439,5 @@ class SoundManagerService {
 export const SoundManager = new SoundManagerService();
 
 if (typeof window !== 'undefined') {
-  (window as any).__soundManager = SoundManager;
+  (window as unknown as { __soundManager: SoundManagerService }).__soundManager = SoundManager;
 }

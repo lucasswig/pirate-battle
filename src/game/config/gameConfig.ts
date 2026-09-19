@@ -43,8 +43,8 @@ export const DEFAULT_GAME_CONFIG: Readonly<GameplayConfig> = Object.freeze({
   tilesetTheme: 'assets_1',
 
   playerMaxHealth: 100,
-  playerMoveSpeed: 160,
-  playerTurnSpeed: 2.5,
+  playerMoveSpeed: 180,
+  playerTurnSpeed: 2.8,
   playerDrag: 0.985,
   playerCollisionRadius: 20,
 

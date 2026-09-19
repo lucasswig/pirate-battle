@@ -424,10 +424,15 @@ export class VisualFeedbackSystem {
       const spawnY = y + Math.sin(offsetAngle) * offsetDist;
       container.position.set(spawnX, spawnY);
 
+      const hasDinghy = (i === dinghyIndex);
       const rippleGraphic = new Graphics();
+      if (hasDinghy) {
+        rippleGraphic.circle(0, 8, 8).stroke({ width: 1.0, color: 0xffffff });
+      } else {
+        rippleGraphic.circle(0, 0, 10).stroke({ width: 1.2, color: 0xffffff });
+      }
       container.addChild(rippleGraphic);
 
-      const hasDinghy = (i === dinghyIndex);
       let dinghySprite: Sprite | undefined;
 
       if (hasDinghy) {
@@ -636,7 +641,7 @@ export class VisualFeedbackSystem {
       if (swimmer.reachedShore) {
         swimmer.waveVx = 0;
         swimmer.waveVy = 0;
-        swimmer.rippleGraphic.clear();
+        swimmer.rippleGraphic.visible = false;
         if (swimmer.hasDinghy && swimmer.dinghySprite && swimmer.beachedAngle !== undefined) {
           swimmer.dinghySprite.rotation = swimmer.beachedAngle + Math.sin(swimmer.elapsed * 1.5) * 0.025;
           swimmer.sprite.rotation = swimmer.dinghySprite.rotation;
@@ -671,7 +676,7 @@ export class VisualFeedbackSystem {
         swimmer.y = swimmer.targetY;
         swimmer.waveVx = 0;
         swimmer.waveVy = 0;
-        swimmer.rippleGraphic.clear();
+        swimmer.rippleGraphic.visible = false;
         swimmer.container.position.set(swimmer.targetX, swimmer.targetY);
         swimmer.container.alpha = 1.0;
         if (swimmer.hasDinghy && swimmer.dinghySprite) {
@@ -707,26 +712,17 @@ export class VisualFeedbackSystem {
           }
           swimmer.sprite.rotation = heading;
 
-          swimmer.rippleGraphic.clear();
+          swimmer.rippleGraphic.visible = true;
           const wakePhase = (swimmer.elapsed % 0.6) / 0.6;
-          const wakeRadius = 3 + wakePhase * 5;
-          const wakeAlpha = (1 - wakePhase) * 0.45;
-          swimmer.rippleGraphic.circle(0, 8, wakeRadius);
-          swimmer.rippleGraphic.stroke({ width: 1.0, color: 0xffffff, alpha: wakeAlpha });
+          swimmer.rippleGraphic.scale.set(0.375 + wakePhase * 0.625);
+          swimmer.rippleGraphic.alpha = (1 - wakePhase) * 0.45;
         } else {
           swimmer.sprite.rotation = heading + Math.sin(swimmer.elapsed * 6) * 0.15;
 
-          swimmer.rippleGraphic.clear();
+          swimmer.rippleGraphic.visible = true;
           const ripplePhase = (swimmer.elapsed % 0.7) / 0.7;
-          const rippleRadius = 4 + ripplePhase * 6;
-          const rippleAlpha = (1 - ripplePhase) * 0.6;
-          swimmer.rippleGraphic.circle(0, 0, rippleRadius);
-          swimmer.rippleGraphic.stroke({ width: 1.2, color: 0xffffff, alpha: rippleAlpha });
-        }
-
-        if (waveSpeed > 15) {
-          swimmer.rippleGraphic.circle(0, 0, swimmer.hasDinghy ? 14 : 9);
-          swimmer.rippleGraphic.stroke({ width: 1.5, color: 0xffffff, alpha: Math.min(0.75, waveSpeed / 80) });
+          swimmer.rippleGraphic.scale.set(0.4 + ripplePhase * 0.6);
+          swimmer.rippleGraphic.alpha = (1 - ripplePhase) * 0.6;
         }
       }
 

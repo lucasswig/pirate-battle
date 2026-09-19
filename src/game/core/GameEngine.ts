@@ -78,6 +78,7 @@ export class GameEngine {
   }
 
   public async init(onProgress?: (progress: number) => void): Promise<void> {
+    void SoundManager.preloadCombatSounds();
     const assets = AssetManager.getInstance();
     await assets.loadAssets(onProgress, this.config.tilesetTheme);
 
@@ -89,6 +90,12 @@ export class GameEngine {
 
     const themeConfig = TILEMAP_THEMES[this.config.tilesetTheme] || TILEMAP_THEMES.assets_1;
     const initialBgColor = themeConfig.waterColor;
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth < 1024
+    );
+    const resolution = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+
     this.app = new Application();
     await this.app.init({
       canvas: this.canvas,
@@ -98,7 +105,7 @@ export class GameEngine {
       roundPixels: true,
       antialias: false,
       autoDensity: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      resolution,
     });
 
     if (this.isDestroyed) {
@@ -150,13 +157,17 @@ export class GameEngine {
   private setupWaterBackground(): void {
     const assets = AssetManager.getInstance();
     const waterTexture = assets.getTexture('water_tile');
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth < 1024
+    );
 
     this.waterTilingSprite = new TilingSprite({
       texture: waterTexture,
-      width: 4000,
-      height: 4000,
+      width: isMobile ? 2200 : 3600,
+      height: isMobile ? 1600 : 2800,
     });
-    this.waterTilingSprite.position.set(-1500, -1500);
+    this.waterTilingSprite.position.set(isMobile ? -650 : -1350, isMobile ? -540 : -1140);
     this.waterTilingSprite.tileScale.set(1.5);
     this.waterTilingSprite.alpha = 0.85;
 

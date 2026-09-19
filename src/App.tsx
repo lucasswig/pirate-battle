@@ -4,13 +4,12 @@ import { NavigationProvider, useNavigation } from './ui/navigation/NavigationCon
 import { MainMenuScreen } from './ui/screens/MainMenuScreen';
 import { LiveGameBackground } from './ui/components/LiveGameBackground';
 import { InitialLoadingScreen } from './ui/components/InitialLoadingScreen';
-import { MinimalLoader } from './ui/components/MinimalLoader';
 import { syncOfflineMatches } from './api/matchApi';
 
-const GameScreen = React.lazy(() => import('./ui/screens/GameScreen').then((m) => ({ default: m.GameScreen })));
-const OptionsScreen = React.lazy(() => import('./ui/screens/OptionsScreen').then((m) => ({ default: m.OptionsScreen })));
-const CaptainsLogScreen = React.lazy(() => import('./ui/screens/CaptainsLogScreen').then((m) => ({ default: m.CaptainsLogScreen })));
-const NetworkScenarioDrawer = React.lazy(() => import('./ui/components/NetworkScenarioDrawer').then((m) => ({ default: m.NetworkScenarioDrawer })));
+import { GameScreen } from './ui/screens/GameScreen';
+import { OptionsScreen } from './ui/screens/OptionsScreen';
+import { CaptainsLogScreen } from './ui/screens/CaptainsLogScreen';
+import { NetworkScenarioDrawer } from './ui/components/NetworkScenarioDrawer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,13 +35,13 @@ const AppContent: React.FC = () => {
 
   if (currentScreen === 'GAME') {
     return (
-      <React.Suspense fallback={<MinimalLoader isFixed />}>
+      <>
         <GameScreen
           onReturnToMenu={() => navigateTo('MENU')}
           onNavigateToRanking={() => navigateTo('RANKING')}
         />
         <NetworkScenarioDrawer />
-      </React.Suspense>
+      </>
     );
   }
 
@@ -50,23 +49,21 @@ const AppContent: React.FC = () => {
     <div className="relative w-screen h-screen overflow-hidden select-none bg-[#00121e]">
       <LiveGameBackground />
       <div className="relative z-10 w-full h-full live-bg-active pointer-events-auto">
-        <React.Suspense fallback={null}>
-          {(() => {
-            switch (currentScreen) {
-              case 'OPTIONS':
-                return <OptionsScreen />;
-              case 'RANKING':
-                return <CaptainsLogScreen initialTab="RANKING" />;
-              case 'HISTORY':
-                return <CaptainsLogScreen initialTab="HISTORY" />;
-              case 'LOG':
-                return <CaptainsLogScreen initialTab="RANKING" />;
-              case 'MENU':
-              default:
-                return <MainMenuScreen />;
-            }
-          })()}
-        </React.Suspense>
+        {(() => {
+          switch (currentScreen) {
+            case 'OPTIONS':
+              return <OptionsScreen />;
+            case 'RANKING':
+              return <CaptainsLogScreen initialTab="RANKING" />;
+            case 'HISTORY':
+              return <CaptainsLogScreen initialTab="HISTORY" />;
+            case 'LOG':
+              return <CaptainsLogScreen initialTab="RANKING" />;
+            case 'MENU':
+            default:
+              return <MainMenuScreen />;
+          }
+        })()}
       </div>
       <div className="absolute bottom-5 right-6 sm:bottom-6 sm:right-8 md:bottom-8 md:right-12 z-20 flex items-center pointer-events-none select-none">
         <img

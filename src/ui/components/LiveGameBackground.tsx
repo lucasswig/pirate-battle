@@ -32,6 +32,11 @@ export const LiveGameBackground: React.FC = () => {
       const themeConfig = TILEMAP_THEMES[theme] || TILEMAP_THEMES.assets_1;
       const initialBgColor = themeConfig.waterColor;
 
+      const isMobile = typeof window !== 'undefined' && (
+        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.innerWidth < 1024
+      );
+
       app = new Application();
       await app.init({
         canvas,
@@ -41,7 +46,7 @@ export const LiveGameBackground: React.FC = () => {
         roundPixels: true,
         antialias: false,
         autoDensity: true,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
+        resolution: isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2),
       });
 
       if (!isMounted || !app.stage) {
@@ -62,10 +67,10 @@ export const LiveGameBackground: React.FC = () => {
       const waterTexture = assets.getTexture('water_tile');
       const waterTilingSprite = new TilingSprite({
         texture: waterTexture,
-        width: 4000,
-        height: 4000,
+        width: isMobile ? 2200 : 3600,
+        height: isMobile ? 1600 : 2800,
       });
-      waterTilingSprite.position.set(-1500, -1500);
+      waterTilingSprite.position.set(isMobile ? -650 : -1350, isMobile ? -540 : -1140);
       waterTilingSprite.tileScale.set(1.5);
       waterTilingSprite.alpha = 0.88;
       backgroundLayer.addChild(waterTilingSprite);
